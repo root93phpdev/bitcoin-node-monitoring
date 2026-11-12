@@ -22,31 +22,36 @@ This project demonstrates Linux server administration, Bash scripting, systemd s
 - Grafana dashboard visualization
 - Console-based server health report
 
+
 ## Architecture
 
-```text
-              Bitcoin Core
-                   |
-                   v
-             Bash Scripts
-                   |
-          +--------+--------+
-          |                 |
-          v                 v
-    Bitcoin Metrics    Service Check
-          |                 |
-          +--------+--------+
-                   |
-                   v
-          Node Exporter
-          Textfile Collector
-                   |
-                   v
-              Prometheus
-                   |
-                   v
-                Grafana
+The monitoring pipeline collects Bitcoin Core metrics and exposes them to Prometheus through the Node Exporter textfile collector.
+
+```mermaid
+flowchart TD
+    A["Bitcoin Core Node"] --> B["bitcoin_metrics.sh"]
+    B --> C["bitcoin.prom"]
+    C --> D["Node Exporter<br/>Textfile Collector"]
+    D --> E["Prometheus"]
+    E --> F["Grafana Dashboard"]
+
+    A --> G["monitor.sh"]
+    G --> H["Terminal Health Report"]
+
+    I["systemd Timer"] --> B
+    J["bitcoin_service_check.sh"] -.-> K["bitcoin_service.prom"]
+    K -.-> D
 ```
+
+### Data Flow
+
+1. Bitcoin Core provides blockchain and network information through RPC.
+2. Bash scripts collect monitoring data.
+3. Metrics are written in Prometheus exposition format.
+4. Node Exporter exposes metrics through its textfile collector.
+5. Prometheus periodically scrapes Node Exporter.
+6. Grafana visualizes the collected metrics.
+
 
 ## Technologies
 
