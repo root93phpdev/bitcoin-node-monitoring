@@ -5,7 +5,6 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-
 User=bitcoin
 Group=bitcoin
 
@@ -22,10 +21,8 @@ ExecStop=/usr/local/bin/bitcoin-cli \
 
 Restart=on-failure
 RestartSec=10
-
 TimeoutStopSec=600
 KillSignal=SIGTERM
-
 LimitNOFILE=65536
 
 [Install]

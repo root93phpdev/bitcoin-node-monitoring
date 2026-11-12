@@ -1,0 +1,11 @@
+
+[Unit]
+Description=Run Bitcoin Core Service Status Check Every Minute
+
+[Timer]
+OnBootSec=35s
+OnUnitActiveSec=1min
+Unit=bitcoin-service-check.service
+
+[Install]
+WantedBy=timers.target

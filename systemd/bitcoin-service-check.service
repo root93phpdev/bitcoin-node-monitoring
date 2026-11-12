@@ -1,0 +1,8 @@
+
+[Unit]
+Description=Bitcoin Core Systemd Service Status Exporter
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/opt/bitcoin-node-monitoring/scripts/bitcoin_service_check.sh
