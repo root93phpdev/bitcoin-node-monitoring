@@ -236,9 +236,10 @@ This allows service availability to be monitored even when Bitcoin Core is stopp
 
 ![Prometheus Targets](screenshots/prometheus-targets.png)
 
-### Terminal Monitoring
+![Prometheus Targets](screenshots/prometheus-targets1.png)
 
-![Terminal Monitoring](screenshots/terminal-monitor.png)
+![Prometheus Targets](screenshots/prometheus-targets2.png)
+
 
 ## Security Considerations
 
