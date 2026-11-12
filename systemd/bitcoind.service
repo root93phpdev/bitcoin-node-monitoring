@@ -1,0 +1,32 @@
+[Unit]
+Description=Bitcoin Core Pruned Node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+User=bitcoin
+Group=bitcoin
+
+ExecStart=/usr/local/bin/bitcoind \
+    -conf=/var/lib/bitcoin/.bitcoin/bitcoin.conf \
+    -datadir=/var/lib/bitcoin/.bitcoin \
+    -daemon=0 \
+    -printtoconsole
+
+ExecStop=/usr/local/bin/bitcoin-cli \
+    -conf=/var/lib/bitcoin/.bitcoin/bitcoin.conf \
+    -datadir=/var/lib/bitcoin/.bitcoin \
+    stop
+
+Restart=on-failure
+RestartSec=10
+
+TimeoutStopSec=600
+KillSignal=SIGTERM
+
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

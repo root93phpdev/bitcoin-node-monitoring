@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Bitcoin Core Metrics Exporter Every Minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=1min
+Unit=bitcoin-metrics.service
+
+[Install]
+WantedBy=timers.target
