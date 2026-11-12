@@ -1,57 +1,73 @@
-
 # Bitcoin Node Monitoring
 
-A self-hosted monitoring solution for a Bitcoin Core node on Ubuntu Server, built with Bash, systemd, Prometheus, Node Exporter and Grafana.
+**A Linux infrastructure monitoring project for Bitcoin Core using Bash, systemd, Prometheus and Grafana.**
 
-The project collects blockchain and peer-network metrics through Bitcoin Core RPC, exposes them using the Node Exporter textfile collector, and makes them available to Prometheus and Grafana.
+![Linux](https://img.shields.io/badge/Linux-Ubuntu-E95420?logo=ubuntu&logoColor=white)
+![Bash](https://img.shields.io/badge/Scripting-Bash-4EAA25?logo=gnubash&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Monitoring-Prometheus-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Dashboard-Grafana-F46800?logo=grafana&logoColor=white)
+![Bitcoin](https://img.shields.io/badge/Bitcoin_Core-v32.1.0-F7931A?logo=bitcoin&logoColor=white)
 
-## Features
+## Overview
 
-- Bitcoin blockchain height and known headers
-- Blockchain synchronization progress
-- Blocks behind and initial block download status
-- Total, inbound and outbound peer connections
-- Bitcoin Core uptime
-- Blocks and chainstate directory sizes
-- Independent Bitcoin Core systemd service monitoring
-- Atomic Prometheus metrics file updates
-- Automated collection with systemd timers
-- Terminal-based node and host health report
+This project implements a monitoring solution for a self-hosted Bitcoin Core full node running on Ubuntu Server.
+
+The solution collects blockchain synchronization, network, service availability and storage metrics using Bash scripts. Metrics are exposed through the Prometheus Node Exporter textfile collector, scraped by Prometheus and visualized in Grafana.
+
+The project demonstrates practical Linux administration, Bash scripting, systemd automation, metrics collection and infrastructure monitoring.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    A["Bitcoin Core"] -->|RPC| B["bitcoin_metrics.sh"]
-    B --> C["bitcoin.prom"]
+    A[Bitcoin Core Node] --> B[Bash Monitoring Scripts]
+    B --> C[Node Exporter Textfile Collector]
+    C --> D[Prometheus]
+    D --> E[Grafana Dashboard]
 
-    D["systemd timer"] --> B
+    F[systemd Services and Timers] --> B
+    F --> G[Bitcoin Service Check]
+    G --> C
 
-    E["bitcoin_service_check.sh"] --> F["bitcoin_service.prom"]
-    G["systemd service-check timer"] --> E
-
-    C --> H["Node Exporter Textfile Collector"]
-    F --> H
-
-    H --> I["Prometheus"]
-    I --> J["Grafana"]
-
-    A -->|RPC| K["monitor.sh"]
-    K --> L["Terminal Health Report"]
+    H[Console Monitor] --> A
+    H --> I[Linux Host Metrics]
 ```
+
+### Monitoring workflow
+
+1. Bitcoin Core provides blockchain and network information through RPC.
+2. Bash scripts collect node metrics and check systemd service status.
+3. Metrics are written in Prometheus exposition format.
+4. Node Exporter exposes the metrics through its HTTP endpoint.
+5. Prometheus periodically scrapes Node Exporter.
+6. Grafana visualizes the collected data.
+
+## Features
+
+- Bitcoin blockchain synchronization monitoring.
+- Block height and header tracking.
+- Synchronization progress monitoring.
+- Network connection monitoring.
+- Bitcoin Core systemd service availability checks.
+- Blockchain and chainstate storage monitoring.
+- Pruned node configuration monitoring.
+- Automated metrics collection using systemd timers.
+- Console-based monitoring report.
+- Grafana dashboards and Prometheus integration.
 
 ## Technology Stack
 
-| Technology | Purpose |
+| Component | Technology |
 |---|---|
-| Ubuntu Server | Operating system |
-| Bitcoin Core | Bitcoin node and RPC interface |
-| Bash | Metrics collection and automation |
-| systemd | Service management and scheduling |
-| Node Exporter | Host metrics and textfile metrics |
-| Prometheus | Metrics collection |
-| Grafana | Dashboard visualization |
-| Git | Version control |
+| Operating system | Ubuntu Server |
+| Blockchain node | Bitcoin Core 32.1.0 |
+| Scripting | Bash |
+| Automation | systemd services and timers |
+| Metrics collection | Node Exporter Textfile Collector |
+| Monitoring | Prometheus |
+| Visualization | Grafana |
+| Data processing | jq, awk |
+| Version control | Git, GitHub |
 
 ## Project Structure
 
@@ -59,246 +75,218 @@ flowchart TD
 bitcoin-node-monitoring/
 ├── prometheus/
 │   └── prometheus.yml
+│
 ├── scripts/
 │   ├── bitcoin_metrics.sh
 │   ├── bitcoin_service_check.sh
 │   └── monitor.sh
+│
 ├── systemd/
 │   ├── bitcoind.service
 │   ├── bitcoin-metrics.service
 │   ├── bitcoin-metrics.timer
 │   ├── bitcoin-service-check.service
 │   └── bitcoin-service-check.timer
+│
 ├── screenshots/
+│   ├── grafana-dashboard.png
+│   ├── prometheus-targets.png
+│   └── terminal-monitor.png
+│
 ├── .gitignore
 └── README.md
 ```
 
 ## Exported Metrics
 
+The monitoring scripts expose the following custom Prometheus metrics.
+
 | Metric | Description |
 |---|---|
-| `bitcoin_blocks` | Current validated block height |
+| `bitcoin_blocks` | Current blockchain height |
 | `bitcoin_headers` | Number of known block headers |
-| `bitcoin_blocks_behind` | Difference between headers and validated blocks |
-| `bitcoin_sync_progress` | Blockchain verification progress, from 0 to 1 |
+| `bitcoin_blocks_behind` | Difference between headers and blocks |
+| `bitcoin_sync_progress` | Blockchain synchronization progress |
 | `bitcoin_initial_block_download` | Initial block download status |
-| `bitcoin_connections` | Total peer connections |
-| `bitcoin_connections_in` | Inbound peer connections |
-| `bitcoin_connections_out` | Outbound peer connections |
+| `bitcoin_connections` | Total network connections |
+| `bitcoin_connections_in` | Incoming connections |
+| `bitcoin_connections_out` | Outgoing connections |
 | `bitcoin_uptime_seconds` | Bitcoin Core uptime |
-| `bitcoin_blocks_size_bytes` | Blocks directory size |
-| `bitcoin_chainstate_size_bytes` | Chainstate directory size |
-| `bitcoin_pruned` | Whether pruning is enabled |
-| `bitcoin_systemd_service_up` | Whether the Bitcoin Core systemd service is active |
+| `bitcoin_blocks_size_bytes` | Blockchain storage size |
+| `bitcoin_chainstate_size_bytes` | Chainstate storage size |
+| `bitcoin_pruned` | Pruned node status |
+| `bitcoin_systemd_service_up` | Bitcoin Core systemd service status |
 
-## Requirements
+## Monitoring
 
-- Ubuntu Server with systemd
-- Bitcoin Core
-- Prometheus
-- Node Exporter with textfile collector enabled
-- Grafana
-- `jq`, `sudo`, `runuser`, `awk`, `du` and standard Linux utilities
+### Prometheus
 
-The example configuration assumes:
+Prometheus collects metrics from Node Exporter and its own monitoring endpoint.
 
-- Bitcoin service user: `bitcoin`
-- Bitcoin CLI: `/usr/local/bin/bitcoin-cli`
-- Bitcoin data directory: `/var/lib/bitcoin/.bitcoin`
-- Node Exporter textfile directory: `/var/lib/prometheus/node-exporter`
-- Node Exporter group: `prometheus`
-- Project installation directory: `/opt/bitcoin-node-monitoring`
+Example scrape configuration:
 
-Adapt these values to your environment.
+```yaml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
 
-## Installation
+scrape_configs:
+  - job_name: prometheus
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+          - localhost:9090
 
-### 1. Install dependencies
-
-```bash
-sudo apt update
-sudo apt install -y jq
+  - job_name: node
+    static_configs:
+      - targets:
+          - localhost:9100
 ```
 
-### 2. Clone the repository
+### Example PromQL Queries
 
-```bash
-sudo git clone https://github.com/root93phpdev/bitcoin-node-monitoring.git /opt/bitcoin-node-monitoring
-```
-
-### 3. Prepare the metrics directory
-
-```bash
-sudo install -d -o root -g prometheus -m 0750 \
-  /var/lib/prometheus/node-exporter
-```
-
-Ensure the Node Exporter process can read this directory and its metric files.
-
-### 4. Configure Node Exporter
-
-Enable the textfile collector with:
-
-```text
---collector.textfile.directory=/var/lib/prometheus/node-exporter
-```
-
-Add this option to the existing Node Exporter service configuration.
-
-### 5. Configure Prometheus
-
-Use the scrape configuration in:
-
-```text
-prometheus/prometheus.yml
-```
-
-Merge the required scrape jobs into your existing Prometheus configuration if necessary.
-
-### 6. Install systemd units
-
-```bash
-sudo cp /opt/bitcoin-node-monitoring/systemd/bitcoin-metrics.service /etc/systemd/system/
-sudo cp /opt/bitcoin-node-monitoring/systemd/bitcoin-metrics.timer /etc/systemd/system/
-
-sudo cp /opt/bitcoin-node-monitoring/systemd/bitcoin-service-check.service /etc/systemd/system/
-sudo cp /opt/bitcoin-node-monitoring/systemd/bitcoin-service-check.timer /etc/systemd/system/
-```
-
-Reload systemd and enable the timers:
-
-```bash
-sudo systemctl daemon-reload
-
-sudo systemctl enable --now bitcoin-metrics.timer
-sudo systemctl enable --now bitcoin-service-check.timer
-```
-
-The included `bitcoind.service` is a reference configuration. Review it before using it on an existing Bitcoin Core installation.
-
-## Console Monitoring
-
-Run the terminal health report:
-
-```bash
-sudo /opt/bitcoin-node-monitoring/scripts/monitor.sh
-```
-
-The report includes:
-
-- Blockchain height and synchronization
-- Peer connections
-- Blockchain storage usage
-- RAM and swap usage
-- CPU load
-- Disk usage
-
-These console values are not custom Prometheus metrics.
-
-## Prometheus Queries
-
-Bitcoin block height:
-
+**Current block height**
 ```promql
 bitcoin_blocks
 ```
 
-Synchronization progress:
-
+**Blockchain synchronization progress**
 ```promql
 bitcoin_sync_progress * 100
 ```
 
-Blocks behind:
-
+**Blocks remaining**
 ```promql
 bitcoin_blocks_behind
 ```
 
-Peer connections:
-
+**Network connections**
 ```promql
 bitcoin_connections
 ```
 
-Inbound connections:
-
-```promql
-bitcoin_connections_in
-```
-
-Outbound connections:
-
-```promql
-bitcoin_connections_out
-```
-
-Bitcoin Core uptime:
-
-```promql
-bitcoin_uptime_seconds
-```
-
-Blocks storage:
-
-```promql
-bitcoin_blocks_size_bytes
-```
-
-Chainstate storage:
-
-```promql
-bitcoin_chainstate_size_bytes
-```
-
-Bitcoin Core service status:
-
+**Bitcoin Core service status**
 ```promql
 bitcoin_systemd_service_up
 ```
 
-## Grafana Dashboard
+**Blockchain storage**
+```promql
+bitcoin_blocks_size_bytes
+```
 
-Grafana can be used to visualize:
+### Grafana
 
-- Current block height
-- Blockchain synchronization progress
-- Blocks behind
-- Peer connections
-- Blockchain storage usage
-- Bitcoin Core service status
+Grafana is used to visualize the collected metrics.
+
+The dashboard can display:
+
+- Blockchain synchronization progress.
+- Current block height.
+- Remaining blocks.
+- Network connections.
+- Bitcoin Core service availability.
+- Blockchain storage usage.
+- Node uptime.
+
+## Console Monitoring
+
+The `monitor.sh` script provides a terminal-based monitoring report.
+
+It displays:
+
+- Bitcoin blockchain status.
+- Synchronization progress.
+- Network connections.
+- Pruned node configuration.
+- Blockchain data directory size.
+- System memory and swap usage.
+- CPU load.
+- Available disk space.
+
+Run the script:
+
+```bash
+sudo ./scripts/monitor.sh
+```
+
+## Automation
+
+Metrics collection is automated using systemd services and timers.
+
+| Unit | Purpose |
+|---|---|
+| `bitcoin-metrics.service` | Collects Bitcoin Core metrics |
+| `bitcoin-metrics.timer` | Runs metrics collection periodically |
+| `bitcoin-service-check.service` | Checks Bitcoin Core service status |
+| `bitcoin-service-check.timer` | Schedules service status checks |
+| `bitcoind.service` | Manages Bitcoin Core |
+
+The metrics collection and service health check are separated into independent systemd units.
+
+This allows service availability to be monitored even when Bitcoin Core is stopped.
 
 ## Screenshots
 
-Add screenshots from your own environment to the `screenshots/` directory.
+### Grafana Dashboard
 
-Suggested files:
+![Grafana Dashboard](screenshots/grafana-dashboard.png)
 
-- `grafana-dashboard.png`
-- `prometheus-targets.png`
-- `terminal-monitor.png`
+### Prometheus Targets
 
-## Security
+![Prometheus Targets](screenshots/prometheus-targets.png)
 
-- Never commit Bitcoin RPC credentials or `bitcoin.conf`.
-- Do not expose Bitcoin RPC publicly without appropriate protection.
-- Restrict access to Prometheus, Node Exporter and Grafana.
-- Review file ownership and permissions before deployment.
+### Terminal Monitoring
+
+![Terminal Monitoring](screenshots/terminal-monitor.png)
+
+## Security Considerations
+
+- Bitcoin Core runs under a dedicated Linux user.
+- Monitoring scripts use controlled permissions.
+- Metrics files are written atomically.
+- RPC credentials are not stored in the Git repository.
+- Local configuration files and sensitive certificates are excluded through `.gitignore`.
+- Monitoring scripts and systemd units run with explicitly defined privileges.
+
+## Key Engineering Decisions
+
+**Atomic metrics updates**
+
+Temporary files and atomic file replacement help prevent Prometheus from reading partially written metrics.
+
+**Separation of responsibilities**
+
+Blockchain metrics collection and systemd service health checks are handled independently.
+
+**Automated execution**
+
+systemd timers eliminate the need for manual metrics collection.
+
+**Prometheus-compatible output**
+
+Metrics are exported in a format supported by the Node Exporter textfile collector.
 
 ## Project Goals
 
-This project demonstrates practical experience with:
+This project was created as a practical DevOps learning and portfolio project to demonstrate:
 
-- Linux server administration
-- Bash scripting
-- Bitcoin Core RPC
-- systemd services and timers
-- Prometheus metrics exposition
-- Node Exporter textfile collector
-- Grafana dashboards
-- Infrastructure monitoring and automation
+- Linux server administration.
+- Bash scripting and automation.
+- systemd service management.
+- Prometheus metrics collection.
+- Grafana monitoring and visualization.
+- Infrastructure troubleshooting.
+- Git and GitHub workflows.
 
-## Status
+## Project Status
 
-A practical Bitcoin Core monitoring lab project. Configuration paths and service names should be adapted to the target environment before deployment.
+The monitoring infrastructure and metrics collection scripts have been implemented.
+
+The project is being documented and prepared for portfolio presentation.
+
+---
+
+**Author:** [Vladimir Derzhanskii](https://github.com/root93phpdev)
+
+**GitHub:** [bitcoin-node-monitoring](https://github.com/root93phpdev/bitcoin-node-monitoring)
